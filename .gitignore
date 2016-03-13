@@ -1,0 +1,9 @@
+# Backup files and system temporaries
+*~
+.*.swp
+*.swo
+
+# compiled files
+*.o
+tests/tests
+rapidcheck/build
