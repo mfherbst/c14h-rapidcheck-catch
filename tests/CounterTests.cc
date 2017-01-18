@@ -1,7 +1,7 @@
+#include "Counter.hh"
 #include "catch.hpp"
 #include <rapidcheck.h>
 #include <rapidcheck/state.h>
-#include "Counter.hh"
 
 // #define HAVE_CLASSIFY
 
@@ -85,8 +85,8 @@ TEST_CASE("Test the counter", "[counter]") {
             CounterModel model;
             model.value = sut.value();
 
-            auto genCommands = state::gen::execOneOf<Increment, Decrement>;
-
+            auto genCommands =
+                  state::gen::execOneOfWithArgs<Increment, Decrement>();
             state::check(model, sut, genCommands);
         };
 

@@ -1,12 +1,13 @@
-#include "catch.hpp"
 #include "Vector.hh"
+#include "catch.hpp"
 #include "extra_generators.hh"
+#include "num_equal.hh"
+#include <numeric>
 #include <rapidcheck.h>
 
 template <typename Scalar>
 void showValue(const Vector<Scalar>& v, std::ostream& os) {
-    typename Vector<Scalar>::size_type i = 0;
-
+    size_t i = 0;
     for (; i < v.size() - 1; ++i) {
         os << v[i] << "   ";
     }
@@ -18,16 +19,15 @@ TEST_CASE("Test Vector", "[vector]") {
 
     typedef double scalar_type;
     typedef Vector<scalar_type> vector_type;
-    typedef typename vector_type::size_type size_type;
 
     SECTION("Test Vector construction") {
         auto testlambda = [] {
-            auto s = *gen::inRange<size_type>(0, maxvecsize + 1);
+            auto s = *gen::inRange<size_t>(0, maxvecsize + 1);
             vector_type v{s};
             RC_ASSERT(v.size() == s);
         };
 
-        rc::check("Test Vector construction", testlambda);
+        CHECK(rc::check("Test Vector construction", testlambda));
     }
 
     SECTION("Test Vector element access") {
@@ -39,7 +39,7 @@ TEST_CASE("Test Vector", "[vector]") {
 
             v[modify] = newval;
 
-            for (size_type i = 0; i < v.size(); ++i) {
+            for (size_t i = 0; i < v.size(); ++i) {
                 if (i == modify) {
                     RC_ASSERT(v[i] == newval);
                 } else {
@@ -47,7 +47,7 @@ TEST_CASE("Test Vector", "[vector]") {
                 }
             }
         };
-        REQUIRE(rc::check("Test Vector element access", testlambda));
+        CHECK(rc::check("Test Vector element access", testlambda));
     }
 
     SECTION("Test Vector addition") {
@@ -55,12 +55,12 @@ TEST_CASE("Test Vector", "[vector]") {
             auto other = *FixedSizeVector<scalar_type>::fixed_size(v.size());
             auto sum = v + other;
 
-            for (size_type i = 0; i < v.size(); ++i) {
+            for (size_t i = 0; i < v.size(); ++i) {
                 RC_ASSERT(sum[i] == v[i] + other[i]);
             }
         };
 
-        rc::check("Test vector addition", testlambda);
+        CHECK(rc::check("Test vector addition", testlambda));
     }
 
     SECTION("Test Vector subtraction") {
@@ -68,11 +68,27 @@ TEST_CASE("Test Vector", "[vector]") {
             auto other = *FixedSizeVector<scalar_type>::fixed_size(v.size());
             auto sum = v - other;
 
-            for (size_type i = 0; i < v.size(); ++i) {
+            for (size_t i = 0; i < v.size(); ++i) {
                 RC_ASSERT(sum[i] == v[i] - other[i]);
             }
         };
 
-        rc::check("Test vector subtraction", testlambda);
+        CHECK(rc::check("Test vector subtraction", testlambda));
+    }
+
+    SECTION("Test Vector inner product") {
+        auto testlambda = [](vector_type v) {
+            const auto other =
+                  *FixedSizeVector<scalar_type>::fixed_size(v.size());
+            const scalar_type res = inprod(v, other);
+
+            const scalar_type ref = std::inner_product(
+                  std::begin(v), std::end(v), std::begin(other), 0.0);
+
+            // Using numerical comparison:
+            // RC_ASSERT(num_equal(ref, res, 1e-10));
+            RC_ASSERT(ref == res);
+        };
+        CHECK(rc::check("Test vector inner product", testlambda));
     }
 }
